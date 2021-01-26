@@ -1,0 +1,194 @@
+<html>
+    <head>
+        <meta http-equiv="content-type" content="text/html;charset=iso-8859-2">
+        <title>ROIs coverage checker</title>
+
+        <link href="https://unpkg.com/tabulator-tables/dist/css/tabulator.min.css" rel="stylesheet">
+        <script type="text/javascript" src="https://unpkg.com/tabulator-tables/dist/js/tabulator.min.js"></script>
+        <script type="text/javascript" src="scripts.js"></script>
+    </head>
+    <body>
+        <script type="text/javascript" src="table_data.js"></script>
+
+        <p id="subjsCheckboxes"></p>
+        <p id="subjsDisplayExcluded"></p>
+        <br>
+        <p id="roisCheckboxes" style="display:none;"></p>
+        <p id="roisDisplayExcluded" style="display:none;"></p>
+        <div>
+            <p>Show stats:
+                <input type="radio" name="show" id="show_rois"> <label for="show_rois">Rois</label>
+                <input type="radio" name="show" id="show_subjs"> <label for="show_subjs">Subjs</label>
+                <input type="radio" name="show" id="show_none"> <label for="show_none">None</label>
+            </p>
+        </div>
+
+        <hr><br>
+
+        <div id="min-table" style="width:38%; display: inline-block;"></div>
+        <div id="example-table" style="width:60%; display: inline-block;"></div>
+
+    <script>
+        var cellFormater = (cell, formatterParams) => {
+            var value = cell.getValue();
+            if (Number.isInteger(value)){
+                let color = ''
+                if (value < 25) {
+                    color = 'red'
+                } else if (value < 50) {
+                    color = '#ff9e44'
+                }
+                if (color) {
+                    return '<span style="color:' + color + '; font-weight:bold;">' + value + "</span>";
+                } else {
+                    return value;
+                }
+            } else {
+                return value;
+            }
+        }
+
+        var dataModel = new DataModel();    // TODO: model si nacte data, bude je filtrovat a vracet pro zobrazeni
+                                            //       krome toho poskytne vedlejsi vystupy, jako treba seznam subjs a rois pro UI
+
+        var excluded = [];
+
+        function updatedExcluded() {
+            document.getElementById('subjsDisplayExcluded').innerText = 'Excluded subjects: ' + excluded.join(', ');
+        }
+        updatedExcluded();
+
+        var subjectsChecksListener = (event) => {
+            let value = event.target.value;
+            let checked = event.target.checked;
+            let index = excluded.indexOf(value);
+            // tahle slozitost resi situaci, ktera by vlastne nemela nikdy nastat...
+            // ale nektere prohlizece si pamatuji nastaveni formularu pred F5
+            if (checked) {
+                if (index >= 0) {
+                    excluded = removeItem(excluded, index);
+                }
+            } else {
+                if (index < 0) {
+                    excluded.push(value);
+                }
+            }
+            excluded.sort()
+            updatedExcluded()
+            updateMainTable()
+        };
+
+        // --------------------- subjs ------------------------
+        let subjs = dataModel.getAllSubjNames();
+        for (let k = 0; k < subjs.length; k++) {
+            let html = '<input type="checkbox" id="subj' + k + '" value="' + subjs[k] + '"> <label for="subj' + k + '">' + subjs[k] + '</label>';
+            document.getElementById('subjsCheckboxes').innerHTML += html;
+        }
+        // toto nemuze byt v jednom cyklu, dokud se appenduji html a furt ho prepisuji, mazu si event listenery
+        for (let k = 0; k < subjs.length; k++) {
+            let obj = document.getElementById('subj' + k);
+            obj.checked = true;
+            obj.onchange = subjectsChecksListener;
+        }
+
+        // --------------------- rois ------------------------
+        let rois = dataModel.getAllRoiNames();
+        for (let k = 0; k < rois.length; k++) {
+            let html = '<input type="checkbox" id="roi' + k + '" value="' + rois[k] + '"> <label for="roi' + k + '">' + rois[k] + '</label>';
+            document.getElementById('roisCheckboxes').innerHTML += html;
+        }
+
+        // --------------------- stats ------------------------
+        let updateStatsListener = () => {
+            let showRois = document.getElementById('show_rois').checked
+            let showSubjs = document.getElementById('show_subjs').checked
+            let showNone = document.getElementById('show_none').checked
+            if (showRois) {
+                alert('rois')
+            } else if (showSubjs) {
+                alert('subjs')
+            } else {
+
+            }
+
+        }
+        document.getElementById('show_rois').onchange = updateStatsListener
+        document.getElementById('show_subjs').onchange = updateStatsListener
+        document.getElementById('show_none').onchange = updateStatsListener
+
+        // odtud se hledaji a zobrazuji nejhure pokryte ROI
+        function calculateRoiStatsTable() {
+            var tabledataMin = [];
+            //let minValuesCount = 2;  // pocet hledanych nejmensich ROIek
+
+            var filteredDataset = dataModel.getFilteredData();
+            for (column of dataModel.getFilteredColumns()) {
+                if (column.field == 'name') {
+                    continue;
+                }
+
+                let subjsRoiValues = [];
+                for (let subject of filteredDataset) {
+                    subjsRoiValues.push(subject[column.field]);
+                }
+
+                let stats = new Stats;
+                lineRecord = {}
+                lineRecord.roi = column.title
+                lineRecord.mean = Math.round(stats.mean(subjsRoiValues))
+                lineRecord.min = Math.round(stats.min(subjsRoiValues))
+                lineRecord.q10 = Math.round(stats.quantile(subjsRoiValues, 0.10))
+                lineRecord.q25 = Math.round(stats.quantile(subjsRoiValues, 0.25))
+
+                /*let minsubjsRoiValues = [];
+                for (let k = 0; k < minValuesCount; k++) {
+                    let minIndex = indexOfSmallest(subjsRoiValues);
+                    minsubjsRoiValues.push(subjsRoiValues[minIndex]);
+                    lineRecord['min_' + (k + 1)] = minsubjsRoiValues[k] + ' (' + filteredDataset[minIndex].name + ')';
+                    subjsRoiValues = removeItem(subjsRoiValues, minIndex);
+                }*/
+                tabledataMin.push(lineRecord)
+            }
+
+            var columnsMin = [
+                {title: 'Roi', field: 'roi', frozen:true},
+                {title: 'Minimum', field: 'min', formatter: cellFormater},
+                {title: 'Decile', field: 'q10', formatter: cellFormater},
+                {title: 'Quartile', field: 'q25', formatter: cellFormater},
+                {title: 'Mean', field: 'mean', formatter: cellFormater},
+            ];
+            /*for (let k = 0; k < minValuesCount; k++) {
+                columnsMin.push({title:"Min " + (k + 1), field:"min_" + (k + 1), sorter:"number"});
+            }*/
+            return {data: tabledataMin, columns: columnsMin}
+        }
+
+        var table = new Tabulator("#example-table", {
+            data: dataModel.getFilteredData(),
+            height: '600px',
+            columns: dataModel.getFilteredColumns(),
+            rowFormatter: (row) => {
+                //alert(row.getData().col);
+                if(row.getData().col < 50) {
+                    row.getElement().style.backgroundColor = "#ff0000";
+                }
+            },
+        });
+
+        function updateMainTable() {
+            table.replaceData(dataModel.getFilteredData());
+        }
+
+        // columns manipulations: http://tabulator.info/docs/4.5/columns
+        // table.setColumns(), table.deleteColumn(), table.addColumn()
+
+        var roiStatsTable = calculateRoiStatsTable();
+        var tableMin = new Tabulator("#min-table", {
+            data: roiStatsTable.data,
+            height: '600px',
+            columns: roiStatsTable.columns,
+        });
+
+    </script>
+    </body>
+</html>
