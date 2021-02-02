@@ -4,27 +4,43 @@
         <title>ROIs coverage checker</title>
 
         <link href="https://unpkg.com/tabulator-tables/dist/css/tabulator.min.css" rel="stylesheet">
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet">
+
+        <link href="styles.css" rel="stylesheet">
         <script type="text/javascript" src="https://unpkg.com/tabulator-tables/dist/js/tabulator.min.js"></script>
         <script type="text/javascript" src="scripts.js"></script>
     </head>
     <body>
         <script type="text/javascript" src="table_data.js"></script>
 
-        <p id="subjsCheckboxes"></p>
-        <p id="subjsDisplayExcluded"></p>
-        <br>
-        <p id="roisCheckboxes" style="display:none;"></p>
-        <p id="roisDisplayExcluded" style="display:none;"></p>
-        <div>
-            <p>Show stats:
-                <input type="radio" name="show" id="show_rois"> <label for="show_rois">Rois</label>
-                <input type="radio" name="show" id="show_subjs"> <label for="show_subjs">Subjs</label>
-                <input type="radio" name="show" id="show_none"> <label for="show_none">None</label>
-            </p>
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-6">
+                    <p id="subjsDisplayExcluded"></p>
+                    <br>
+                    <p id="roisDisplayExcluded"></p>
+                    <div>
+                        <p>Show stats:
+                            <input type="radio" name="show" id="show_rois"> <label for="show_rois">Rois</label>
+                            <input type="radio" name="show" id="show_subjs"> <label for="show_subjs">Subjs</label>
+                            <input type="radio" name="show" id="show_none"> <label for="show_none">None</label>
+                        </p>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="itemsContainer">
+                        <p id="subjsCheckboxes"><b>Subjects:</b><br></p>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="itemsContainer">
+                        <p id="roisCheckboxes"><b>Rois:</b><br></p>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <hr><br>
-
+        <hr>
         <div id="statsTablePanel" style="width:38%; display: inline-block;"></div>
         <div id="mainTablePanel" style="width:60%; display: inline-block;"></div>
 
@@ -81,7 +97,7 @@
         // --------------------- subjs ------------------------
         let subjs = dataModel.getAllSubjNames()
         for (let k = 0; k < subjs.length; k++) {
-            let html = '<input type="checkbox" id="subj' + k + '" value="' + subjs[k] + '"> <label for="subj' + k + '">' + subjs[k] + '</label>'
+            let html = '<input type="checkbox" id="subj' + k + '" value="' + subjs[k] + '"> <label for="subj' + k + '">' + subjs[k] + '</label><br>'
             document.getElementById('subjsCheckboxes').innerHTML += html
         }
         // toto nemuze byt v jednom cyklu, dokud se appenduji html a furt ho prepisuji, mazu si event listenery
@@ -94,7 +110,7 @@
         // --------------------- rois ------------------------
         let rois = dataModel.getAllRoiNames()
         for (let k = 0; k < rois.length; k++) {
-            let html = '<input type="checkbox" id="roi' + k + '" value="' + rois[k] + '"> <label for="roi' + k + '">' + rois[k] + '</label>'
+            let html = '<input type="checkbox" id="roi' + k + '" value="' + rois[k] + '"> <label for="roi' + k + '">' + rois[k] + '</label><br>'
             document.getElementById('roisCheckboxes').innerHTML += html
         }
 
