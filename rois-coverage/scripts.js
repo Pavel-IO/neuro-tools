@@ -58,11 +58,13 @@ function DataModel() {
     this.rawData = tabledata    // ted to existuje jako globalni promenna vygenerovana do souboru table_data.js
     this.rawColumns = columns   // ted to existuje jako globalni promenna vygenerovana do souboru table_data.js
 
+    this.excluded = []
+
     this.getFilteredData = () => {
         let filtered = []
         for (let subj of this.rawData) {
             let subjName = subj.name;
-            if (!excluded.includes(subjName)) {
+            if (!this.excluded.includes(subjName)) {
                 filtered.push(subj)
             }
         }
@@ -95,5 +97,74 @@ function DataModel() {
             columnNames.push(column.title)
         }
         return columnNames
+    }
+}
+
+function StatsGenerator(dataModel) {
+    this.calculateRoisStatsTable = () => {
+        let roisStat = []
+        let filteredDataset = dataModel.getFilteredData()
+        for (column of dataModel.getFilteredColumns()) {
+            if (column.field == 'name') {
+                continue
+            }
+
+            let subjsRoiValues = []
+            for (let subject of filteredDataset) {
+                subjsRoiValues.push(subject[column.field])
+            }
+
+            let stats = new Stats
+            lineRecord = {}
+            lineRecord.roi = column.title
+            lineRecord.mean = Math.round(stats.mean(subjsRoiValues))
+            lineRecord.min = Math.round(stats.min(subjsRoiValues))
+            lineRecord.q10 = Math.round(stats.quantile(subjsRoiValues, 0.10))
+            lineRecord.q25 = Math.round(stats.quantile(subjsRoiValues, 0.25))
+            roisStat.push(lineRecord)
+        }
+
+        var roisStatColumns = [
+            {title: 'Roi', field: 'roi', width: 200, frozen:true},
+            {title: 'Minimum', field: 'min', formatter: cellFormater},
+            {title: 'Decile', field: 'q10', formatter: cellFormater},
+            {title: 'Quartile', field: 'q25', formatter: cellFormater},
+            {title: 'Mean', field: 'mean', formatter: cellFormater},
+        ]
+        return {data: roisStat, columns: roisStatColumns}
+    }
+
+    this.calculateSubjsStatsTable = () => {
+        let subjsStat = []
+        let filteredDataset = dataModel.getFilteredData()
+        let filteredColumns = dataModel.getFilteredColumns()
+        for (subjRecord of filteredDataset) {
+
+            let roisSubjValues = []
+            for (let column of filteredColumns) {
+                if (column.field == 'name') {
+                    continue
+                }
+                roisSubjValues.push(subjRecord[column.field])
+            }
+
+            let stats = new Stats
+            lineRecord = {}
+            lineRecord.roi = subjRecord.name
+            lineRecord.mean = Math.round(stats.mean(roisSubjValues))
+            lineRecord.min = Math.round(stats.min(roisSubjValues))
+            lineRecord.q10 = Math.round(stats.quantile(roisSubjValues, 0.10))
+            lineRecord.q25 = Math.round(stats.quantile(roisSubjValues, 0.25))
+            subjsStat.push(lineRecord)
+        }
+
+        var subjsStatColumns = [
+            {title: 'Subj', field: 'roi', width:200, frozen:true},
+            {title: 'Minimum', field: 'min', formatter: cellFormater},
+            {title: 'Decile', field: 'q10', formatter: cellFormater},
+            {title: 'Quartile', field: 'q25', formatter: cellFormater},
+            {title: 'Mean', field: 'mean', formatter: cellFormater},
+        ]
+        return {data: subjsStat, columns: subjsStatColumns}
     }
 }
