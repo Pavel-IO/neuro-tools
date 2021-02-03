@@ -23,21 +23,43 @@ function MainUI(dataModel) {
     this.subjectsChecksListener = (event) => {
         let value = event.target.value
         let checked = event.target.checked
-        let index = dataModel.excluded.indexOf(value)
+        let index = dataModel.excludedSubjs.indexOf(value)
         // tahle slozitost resi situaci, ktera by vlastne nemela nikdy nastat...
         // ale nektere prohlizece si pamatuji nastaveni formularu pred F5
         if (checked) {
             if (index >= 0) {
-                dataModel.excluded = removeItem(dataModel.excluded, index)
+                dataModel.excludedSubjs = removeItem(dataModel.excludedSubjs, index)
             }
         } else {
             if (index < 0) {
-                dataModel.excluded.push(value)
+                dataModel.excludedSubjs.push(value)
             }
         }
-        dataModel.excluded.sort()
+        dataModel.excludedSubjs.sort()
         this.updateExcluded()
         this.mainTable.update()
+        statsUI.updateStatsListener()
+    }
+
+    this.roisChecksListener = (event) => {
+        let value = event.target.value
+        let checked = event.target.checked
+        let index = dataModel.excludedRois.indexOf(value)
+        // tahle slozitost resi situaci, ktera by vlastne nemela nikdy nastat...
+        // ale nektere prohlizece si pamatuji nastaveni formularu pred F5
+        if (checked) {
+            if (index >= 0) {
+                dataModel.excludedRois = removeItem(dataModel.excludedRois, index)
+            }
+        } else {
+            if (index < 0) {
+                dataModel.excludedRois.push(value)
+            }
+        }
+        dataModel.excludedRois.sort()
+        this.updateExcluded()
+        this.mainTable.update()
+        statsUI.updateStatsListener()
     }
 
     this.createSubjs = () => {
@@ -60,10 +82,17 @@ function MainUI(dataModel) {
             let html = '<input type="checkbox" id="roi' + k + '" value="' + rois[k] + '"> <label for="roi' + k + '">' + rois[k] + '</label><br>'
             document.getElementById('roisCheckboxes').innerHTML += html
         }
+        // toto nemuze byt v jednom cyklu, dokud se appenduji html a furt ho prepisuji, mazu si event listenery
+        for (let k = 0; k < rois.length; k++) {
+            let obj = document.getElementById('roi' + k)
+            obj.checked = true
+            obj.onchange = this.roisChecksListener
+        }
     }
 
     this.updateExcluded = () => {
-        document.getElementById('subjsDisplayExcluded').innerText = 'Excluded subjects: ' + this.dataModel.excluded.join(', ')
+        document.getElementById('subjsDisplayExcluded').innerHTML = '<b>Excluded subjects:</b> ' + this.dataModel.excludedSubjs.join(', ')
+        document.getElementById('roisDisplayExcluded').innerHTML = '<b>Excluded rois:</b> ' + this.dataModel.excludedRois.join(', ')
     }
 
     this.init = () => {
@@ -123,6 +152,7 @@ function MainTable(dataModel) {
     })
 
     this.update = () => {
+        this.table.setColumns(dataModel.getFilteredColumns())
         this.table.replaceData(dataModel.getFilteredData())
     }
 

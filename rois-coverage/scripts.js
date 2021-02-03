@@ -58,13 +58,14 @@ function DataModel() {
     this.rawData = tabledata    // ted to existuje jako globalni promenna vygenerovana do souboru table_data.js
     this.rawColumns = columns   // ted to existuje jako globalni promenna vygenerovana do souboru table_data.js
 
-    this.excluded = []
+    this.excludedSubjs = []
+    this.excludedRois = []
 
     this.getFilteredData = () => {
         let filtered = []
         for (let subj of this.rawData) {
             let subjName = subj.name;
-            if (!this.excluded.includes(subjName)) {
+            if (!this.excludedSubjs.includes(subjName)) {
                 filtered.push(subj)
             }
         }
@@ -75,7 +76,9 @@ function DataModel() {
         let filtered = [];
         for (let column of this.rawColumns) {
             column.formatter = cellFormater
-            filtered.push(column)
+            if (!this.excludedRois.includes(column.title)) {
+                filtered.push(column)
+            }
         }
         return filtered
     }
