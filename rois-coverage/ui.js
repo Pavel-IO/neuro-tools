@@ -37,7 +37,7 @@ function MainUI(dataModel) {
         }
         dataModel.excludedSubjs.sort()
         this.updateExcluded()
-        this.mainTable.update()
+        this.mainTable.updateRows()
         statsUI.updateStatsListener()
     }
 
@@ -58,7 +58,7 @@ function MainUI(dataModel) {
         }
         dataModel.excludedRois.sort()
         this.updateExcluded()
-        this.mainTable.update()
+        this.mainTable.updateColumns()
         statsUI.updateStatsListener()
     }
 
@@ -144,20 +144,21 @@ function MainTable(dataModel) {
         data: dataModel.getFilteredData(),
         height: '600px',
         columns: dataModel.getFilteredColumns(),
-        rowFormatter: (row) => {
-            if(row.getData().col < 50) {
-                row.getElement().style.backgroundColor = '#ff0000'
-            }
-        },
     })
 
-    this.update = () => {
-        this.table.setColumns(dataModel.getFilteredColumns())
-        this.table.replaceData(dataModel.getFilteredData())
+    this.updateRows = () => {
+        this.table.setFilter('name', 'in', dataModel.getFilteredSubjs())
     }
 
-    // columns manipulations: http://tabulator.info/docs/4.5/columns
-    // table.setColumns(), table.deleteColumn(), table.addColumn()
+    this.updateColumns = () => {
+        for (let c of dataModel.getSHColumns()) {
+            if (c.show) {
+                this.table.showColumn(c.column)
+            } else {
+                this.table.hideColumn(c.column)
+            }
+        }
+    }
 }
 
 function StatsTable(statsGenerator) {

@@ -72,6 +72,17 @@ function DataModel() {
         return filtered
     }
 
+    this.getFilteredSubjs = () => {
+        let filtered = []
+        for (let subj of this.rawData) {
+            let subjName = subj.name;
+            if (!this.excludedSubjs.includes(subjName)) {
+                filtered.push(subjName)
+            }
+        }
+        return filtered
+    }
+
     this.getFilteredColumns = () => {
         let filtered = [];
         for (let column of this.rawColumns) {
@@ -79,6 +90,14 @@ function DataModel() {
             if (!this.excludedRois.includes(column.title)) {
                 filtered.push(column)
             }
+        }
+        return filtered
+    }
+
+    this.getSHColumns = () => {
+        let filtered = [];
+        for (let column of this.rawColumns) {
+            filtered.push({column: column.field, show: !this.excludedRois.includes(column.title)})
         }
         return filtered
     }
