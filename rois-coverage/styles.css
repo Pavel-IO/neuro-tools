@@ -2,3 +2,20 @@
     height: 350px;
     overflow: auto;
 }
+
+.changeable {
+    font-weight: bold;
+    color: blue;
+}
+
+.title {
+    border-bottom-style: dotted;
+}
+
+.areaExcluded {
+    width: 100%;
+}
+
+.marginTop {
+    margin-top: 15px;
+}

@@ -15,9 +15,33 @@
         <div class="container-fluid">
             <div class="row">
                 <div class="col-6">
-                    <p id="subjsDisplayExcluded"></p>
-                    <p id="roisDisplayExcluded"></p>
                     <div>
+                        <b>Excluded subjects (<span id="excludedSubjsCount" class="changeable">NaN</span>
+                            of <span id="allSubjsCount" class="changeable">NaN</span>):</b><br>
+                        <textarea id="subjsDisplayExcluded" class="areaExcluded" readonly="readonly"></textarea>
+                    </div>
+                    <div>
+                        <b>Excluded rois (<span id="excludedRoisCount" class="changeable">NaN</span>
+                            of <span id="allRoisCount" class="changeable">NaN</span>):</b><br>
+                        <textarea id="roisDisplayExcluded" class="areaExcluded"></textarea>
+                    </div>
+                    <div class="marginTop">
+                        <p>
+                            <span id="subjsSearchCount" class="changeable title" title="See stats table">NaN</span>
+                                 subjects with some ROI coverage less than
+                            <input type="number" id="subjsSearchThr" min="1" max="100" step="1" pattern="[0-9]">
+                            <button id="subjsSearchExclude">Exclude these subjects</button>
+                        </p>
+                        <p>
+                            <span id="roisSearchCount" class="changeable title" title="See stats table">NaN</span>
+                                    rois with <select><option>minimum</option><option>decile</option><option>quartile</option>
+                                    <option>mean</option></select> less than
+                            <input type="number" id="roisSearchThr" min="1" max="100" step="1" pattern="[0-9]">
+                            <button id="roisSearchExclude">Exclude these rois</button>
+                        </p>
+                    </div>
+                    <div>
+                        <hr>
                         <p>Show stats:
                             <input type="radio" name="show" id="show_rois"> <label for="show_rois">Rois</label>
                             <input type="radio" name="show" id="show_subjs"> <label for="show_subjs">Subjs</label>

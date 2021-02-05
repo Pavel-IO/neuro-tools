@@ -20,6 +20,13 @@ var cellFormater = (cell, formatterParams) => {
 function MainUI(dataModel) {
     this.dataModel = dataModel
 
+    this.docText = (id, text) => {
+        document.getElementById(id).innerText = text
+    }
+    this.docVal = (id, text) => {
+        document.getElementById(id).value = text
+    }
+
     this.subjectsChecksListener = (event) => {
         let value = event.target.value
         let checked = event.target.checked
@@ -91,15 +98,50 @@ function MainUI(dataModel) {
     }
 
     this.updateExcluded = () => {
-        document.getElementById('subjsDisplayExcluded').innerHTML = '<b>Excluded subjects:</b> ' + this.dataModel.excludedSubjs.join(', ')
-        document.getElementById('roisDisplayExcluded').innerHTML = '<b>Excluded rois:</b> ' + this.dataModel.excludedRois.join(', ')
+        this.docText('excludedSubjsCount', this.dataModel.excludedSubjs.length)
+        this.docText('allSubjsCount', this.dataModel.getAllRowsCount())
+        this.docVal('subjsDisplayExcluded', this.dataModel.excludedSubjs.join(', '))
+
+        this.docText('excludedRoisCount', this.dataModel.excludedRois.length)
+        this.docText('allRoisCount', this.dataModel.getAllColumnsCount())
+        this.docVal('roisDisplayExcluded', this.dataModel.excludedRois.join(', '))
+    }
+
+    this.updateSubjSearch = () => {
+        let subjsInputObj = document.getElementById('subjsSearchThr')
+        let subjsCountObj = document.getElementById('subjsSearchCount')
+        let lowerSubjs = this.dataModel.getSubjsByCoverage(parseInt(subjsInputObj.value))
+        subjsCountObj.innerText = lowerSubjs.length
+    }
+
+    this.createSearch = () => {
+        let subjsInputObj = document.getElementById('subjsSearchThr')
+        subjsInputObj.value = 50
+        subjsInputObj.onchange = this.updateSubjSearch
+
+        let subjsExcludeObj = document.getElementById('subjsSearchExclude')
+        subjsExcludeObj.onclick = () => {
+            let subjInputObj = document.getElementById('subjsSearchThr')
+            for (let subj of this.dataModel.getSubjsByCoverage(parseInt(subjInputObj.value))) {
+                this.dataModel.excludeSubj(subj)
+            }
+            this.globalUpdateSubjs()
+        }
+    }
+
+    this.globalUpdateSubjs = () => {
+        this.updateExcluded()
+        this.updateSubjSearch()
+        this.mainTable.updateRows()
+        statsUI.updateStatsListener()
     }
 
     this.init = () => {
         this.createSubjs()
         this.createRois()
         this.updateExcluded()
-
+        this.createSearch()
+        this.updateSubjSearch()
         this.mainTable = new MainTable(this.dataModel)
     }
 }

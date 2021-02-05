@@ -61,6 +61,11 @@ function DataModel() {
     this.excludedSubjs = []
     this.excludedRois = []
 
+    this.excludeSubj = (subj) => {
+        this.excludedSubjs.push(subj)  // TODO: radeji hlidat duplicity (i kvuli pozdejsimu mazani)
+        this.excludedSubjs.sort()
+    }
+
     this.getFilteredData = () => {
         let filtered = []
         for (let subj of this.rawData) {
@@ -94,6 +99,19 @@ function DataModel() {
         return filtered
     }
 
+    this.getSubjsByCoverage = (coverageThr) => {
+        let result = []
+        for (let subj of this.getFilteredData()) {
+            for (let roi of this.getFilteredColumns()) {
+                if (subj[roi.field] <= coverageThr) {
+                    result.push(subj.name)
+                    break
+                }
+            }
+        }
+        return result
+    }
+
     this.getSHColumns = () => {
         let filtered = [];
         for (let column of this.rawColumns) {
@@ -119,6 +137,14 @@ function DataModel() {
             columnNames.push(column.title)
         }
         return columnNames
+    }
+
+    this.getAllRowsCount = () => {
+        return this.rawData.length
+    }
+
+    this.getAllColumnsCount = () => {
+        return this.rawColumns.length
     }
 }
 
