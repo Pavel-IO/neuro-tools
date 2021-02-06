@@ -67,49 +67,42 @@ function DataModel() {
     }
 
     this.getFilteredData = () => {
-        let filtered = []
-        for (let subj of this.rawData) {
-            let subjName = subj.name;
-            if (!this.excludedSubjs.includes(subjName)) {
-                filtered.push(subj)
-            }
-        }
-        return filtered
+        return this.rawData.filter(subj => !this.excludedSubjs.includes(subj.name))
     }
 
     this.getFilteredSubjs = () => {
-        let filtered = []
-        for (let subj of this.rawData) {
-            let subjName = subj.name;
-            if (!this.excludedSubjs.includes(subjName)) {
-                filtered.push(subjName)
-            }
-        }
-        return filtered
+        return this.getFilteredData().map(subj => subj.name)
     }
 
     this.getFilteredColumns = () => {
-        let filtered = [];
-        for (let column of this.rawColumns) {
-            column.formatter = cellFormater
-            if (!this.excludedRois.includes(column.title)) {
-                filtered.push(column)
-            }
-        }
-        return filtered
+        return this.rawColumns.filter(column => !this.excludedRois.includes(column.title))
+                                .map(column => { column.formatter = cellFormater; return column })
     }
 
-    this.getSubjsByCoverage = (coverageThr) => {
+    this.getRoisByCoverage = (coverageThr) => {
+        let stats = new Stats
         let result = []
-        for (let subj of this.getFilteredData()) {
-            for (let roi of this.getFilteredColumns()) {
-                if (subj[roi.field] <= coverageThr) {
-                    result.push(subj.name)
-                    break
-                }
+        let rowsCache = this.getFilteredData()
+        for (let roi of this.getFilteredColumns()) {
+            let buffer = []
+            for (let subj of rowsCache) {
+                buffer.push(subj[roi.field])
+            }
+            let q10 = Math.round(stats.quantile(buffer, 0.10))
+            if (q10 <= coverageThr) {
+                result.push(roi.title)
             }
         }
         return result
+    }
+
+    this.getSubjsByCoverage = (coverageThr) => {
+        let columnsCache = this.getFilteredColumns()
+        let isSubjSmallerThanCoverage = (subj, coverageThr) =>
+            columnsCache.find(roi => subj[roi.field] <= coverageThr) !== undefined
+
+        return this.getFilteredData().filter(subj => isSubjSmallerThanCoverage(subj, coverageThr))
+                                        .map(subj => subj.name)
     }
 
     this.getSHColumns = () => {
@@ -121,22 +114,11 @@ function DataModel() {
     }
 
     this.getAllSubjNames = () => {
-        let subjNames = []
-        for (let subj of this.rawData) {
-            subjNames.push(subj.name)
-        }
-        return subjNames
+        return this.rawData.map(subj => subj.name)
     }
 
     this.getAllRoiNames = () => {
-        let columnNames = []
-        for (let column of this.rawColumns) {
-            if (column.title == 'Subject') {  // TODO: skip first, not compare value
-                continue
-            }
-            columnNames.push(column.title)
-        }
-        return columnNames
+        return this.rawColumns.slice(1).map(column => column.title)
     }
 
     this.getAllRowsCount = () => {
@@ -150,19 +132,11 @@ function DataModel() {
 
 function StatsGenerator(dataModel) {
     this.calculateRoisStatsTable = () => {
+        let stats = new Stats
         let roisStat = []
         let filteredDataset = dataModel.getFilteredData()
-        for (column of dataModel.getFilteredColumns()) {
-            if (column.field == 'name') {
-                continue
-            }
-
-            let subjsRoiValues = []
-            for (let subject of filteredDataset) {
-                subjsRoiValues.push(subject[column.field])
-            }
-
-            let stats = new Stats
+        for (column of dataModel.getFilteredColumns().slice(1)) {
+            let subjsRoiValues = filteredDataset.map(subject => subject[column.field])
             lineRecord = {}
             lineRecord.roi = column.title
             lineRecord.mean = Math.round(stats.mean(subjsRoiValues))
@@ -183,20 +157,11 @@ function StatsGenerator(dataModel) {
     }
 
     this.calculateSubjsStatsTable = () => {
+        let stats = new Stats
         let subjsStat = []
-        let filteredDataset = dataModel.getFilteredData()
         let filteredColumns = dataModel.getFilteredColumns()
-        for (subjRecord of filteredDataset) {
-
-            let roisSubjValues = []
-            for (let column of filteredColumns) {
-                if (column.field == 'name') {
-                    continue
-                }
-                roisSubjValues.push(subjRecord[column.field])
-            }
-
-            let stats = new Stats
+        for (subjRecord of dataModel.getFilteredData()) {
+            let roisSubjValues = filteredColumns.slice(1).map(column => subjRecord[column.field])
             lineRecord = {}
             lineRecord.roi = subjRecord.name
             lineRecord.mean = Math.round(stats.mean(roisSubjValues))

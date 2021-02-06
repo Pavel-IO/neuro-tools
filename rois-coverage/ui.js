@@ -107,17 +107,22 @@ function MainUI(dataModel) {
         this.docVal('roisDisplayExcluded', this.dataModel.excludedRois.join(', '))
     }
 
-    this.updateSubjSearch = () => {
+    this.updateSubjsSearch = () => {
         let subjsInputObj = document.getElementById('subjsSearchThr')
-        let subjsCountObj = document.getElementById('subjsSearchCount')
         let lowerSubjs = this.dataModel.getSubjsByCoverage(parseInt(subjsInputObj.value))
-        subjsCountObj.innerText = lowerSubjs.length
+        this.docText('subjsSearchCount', lowerSubjs.length)
     }
 
-    this.createSearch = () => {
+    this.updateRoisSearch = () => {
+        let roisInputObj = document.getElementById('roisSearchThr')
+        let lowerRois = this.dataModel.getRoisByCoverage(parseInt(roisInputObj.value))
+        this.docText('roisSearchCount', lowerRois.length)
+    }
+
+    this.createSubjsSearch = () => {
         let subjsInputObj = document.getElementById('subjsSearchThr')
         subjsInputObj.value = 50
-        subjsInputObj.onchange = this.updateSubjSearch
+        subjsInputObj.onchange = this.updateSubjsSearch
 
         let subjsExcludeObj = document.getElementById('subjsSearchExclude')
         subjsExcludeObj.onclick = () => {
@@ -129,9 +134,24 @@ function MainUI(dataModel) {
         }
     }
 
+    this.createRoisSearch = () => {
+        let subjsInputObj = document.getElementById('roisSearchThr')
+        subjsInputObj.value = 50
+        subjsInputObj.onchange = this.updateRoisSearch
+
+        /*let subjsExcludeObj = document.getElementById('subjsSearchExclude')
+        subjsExcludeObj.onclick = () => {
+            let subjInputObj = document.getElementById('subjsSearchThr')
+            for (let subj of this.dataModel.getSubjsByCoverage(parseInt(subjInputObj.value))) {
+                this.dataModel.excludeSubj(subj)
+            }
+            this.globalUpdateSubjs()
+        }*/
+    }
+
     this.globalUpdateSubjs = () => {
         this.updateExcluded()
-        this.updateSubjSearch()
+        this.updateSubjsSearch()
         this.mainTable.updateRows()
         statsUI.updateStatsListener()
     }
@@ -139,9 +159,11 @@ function MainUI(dataModel) {
     this.init = () => {
         this.createSubjs()
         this.createRois()
+        this.createSubjsSearch()
+        this.createRoisSearch()
         this.updateExcluded()
-        this.createSearch()
-        this.updateSubjSearch()
+        this.updateSubjsSearch()
+        this.updateRoisSearch()
         this.mainTable = new MainTable(this.dataModel)
     }
 }
