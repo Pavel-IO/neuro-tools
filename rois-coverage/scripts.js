@@ -58,16 +58,42 @@ function DataModel() {
     this.rawData = tabledata    // ted to existuje jako globalni promenna vygenerovana do souboru table_data.js
     this.rawColumns = columns   // ted to existuje jako globalni promenna vygenerovana do souboru table_data.js
 
-    this.excludedSubjs = []
+    this.excludedSubjs = []  // uz se pouziva jenom pro vypis excludovanych, po dokonceni refaktoru se bude moci zmenit na mapu
     this.excludedRois = []
 
-    this.excludeSubj = (subj) => {
-        this.excludedSubjs.push(subj)  // TODO: radeji hlidat duplicity (i kvuli pozdejsimu mazani)
-        this.excludedSubjs.sort()
+    this.isSubjActive = (subj) => {
+        return this.excludedSubjs.indexOf(subj) < 0
+    }
+
+    this.setSubjActive = (subj, active) => {
+        if (active) {
+            let index = this.excludedSubjs.indexOf(subj)
+            if (index >= 0) {
+                this.excludedSubjs = removeItem(this.excludedSubjs, index)
+            }
+        } else {
+            this.excludedSubjs.push(subj)
+            this.excludedSubjs.sort()
+        }
+    }
+
+    this.isRoiActive = (roi) => {
+        return this.excludedRois.indexOf(roi) < 0
+    }
+
+    this.setRoiActive = (roi, active) => {
+        if (active) {
+            let index = this.excludedRois.indexOf(roi)
+            if (index >= 0) {
+                this.excludedRois = removeItem(this.excludedRois, index)
+            }
+        } else {
+            this.excludedRois.push(roi)
+        }
     }
 
     this.getFilteredData = () => {
-        return this.rawData.filter(subj => !this.excludedSubjs.includes(subj.name))
+        return this.rawData.filter(subj => this.isSubjActive(subj.name))
     }
 
     this.getFilteredSubjs = () => {
@@ -75,7 +101,7 @@ function DataModel() {
     }
 
     this.getFilteredColumns = () => {
-        return this.rawColumns.filter(column => !this.excludedRois.includes(column.title))
+        return this.rawColumns.filter(column => this.isRoiActive(column.title))
                                 .map(column => { column.formatter = cellFormater; return column })
     }
 
@@ -108,7 +134,7 @@ function DataModel() {
     this.getSHColumns = () => {
         let filtered = [];
         for (let column of this.rawColumns) {
-            filtered.push({column: column.field, show: !this.excludedRois.includes(column.title)})
+            filtered.push({column: column.field, show: this.isRoiActive(column.title)})
         }
         return filtered
     }

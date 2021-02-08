@@ -19,6 +19,8 @@ var cellFormater = (cell, formatterParams) => {
 
 function MainUI(dataModel) {
     this.dataModel = dataModel
+    this.subjCheckObjs = []
+    this.roiCheckObjs = []
 
     this.docText = (id, text) => {
         document.getElementById(id).innerText = text
@@ -28,42 +30,14 @@ function MainUI(dataModel) {
     }
 
     this.subjectsChecksListener = (event) => {
-        let value = event.target.value
-        let checked = event.target.checked
-        let index = dataModel.excludedSubjs.indexOf(value)
-        // tahle slozitost resi situaci, ktera by vlastne nemela nikdy nastat...
-        // ale nektere prohlizece si pamatuji nastaveni formularu pred F5
-        if (checked) {
-            if (index >= 0) {
-                dataModel.excludedSubjs = removeItem(dataModel.excludedSubjs, index)
-            }
-        } else {
-            if (index < 0) {
-                dataModel.excludedSubjs.push(value)
-            }
-        }
-        dataModel.excludedSubjs.sort()
+        dataModel.setSubjActive(event.target.value, event.target.checked)
         this.updateExcluded()
         this.mainTable.updateRows()
         statsUI.updateStatsListener()
     }
 
     this.roisChecksListener = (event) => {
-        let value = event.target.value
-        let checked = event.target.checked
-        let index = dataModel.excludedRois.indexOf(value)
-        // tahle slozitost resi situaci, ktera by vlastne nemela nikdy nastat...
-        // ale nektere prohlizece si pamatuji nastaveni formularu pred F5
-        if (checked) {
-            if (index >= 0) {
-                dataModel.excludedRois = removeItem(dataModel.excludedRois, index)
-            }
-        } else {
-            if (index < 0) {
-                dataModel.excludedRois.push(value)
-            }
-        }
-        dataModel.excludedRois.sort()
+        dataModel.setRoiActive(event.target.value, event.target.checked)
         this.updateExcluded()
         this.mainTable.updateColumns()
         statsUI.updateStatsListener()
@@ -80,6 +54,7 @@ function MainUI(dataModel) {
             let obj = document.getElementById('subj' + k)
             obj.checked = true
             obj.onchange = this.subjectsChecksListener
+            this.subjCheckObjs.push(obj)
         }
     }
 
@@ -94,6 +69,7 @@ function MainUI(dataModel) {
             let obj = document.getElementById('roi' + k)
             obj.checked = true
             obj.onchange = this.roisChecksListener
+            this.roiCheckObjs.push(obj)
         }
     }
 
@@ -128,9 +104,12 @@ function MainUI(dataModel) {
         subjsExcludeObj.onclick = () => {
             let subjInputObj = document.getElementById('subjsSearchThr')
             for (let subj of this.dataModel.getSubjsByCoverage(parseInt(subjInputObj.value))) {
-                this.dataModel.excludeSubj(subj)
+                this.dataModel.setSubjActive(subj, false)
             }
             this.globalUpdateSubjs()
+            for (let obj of this.subjCheckObjs) {
+                obj.checked = dataModel.isSubjActive(obj.value)
+            }
         }
     }
 
@@ -139,20 +118,30 @@ function MainUI(dataModel) {
         subjsInputObj.value = 50
         subjsInputObj.onchange = this.updateRoisSearch
 
-        /*let subjsExcludeObj = document.getElementById('subjsSearchExclude')
-        subjsExcludeObj.onclick = () => {
-            let subjInputObj = document.getElementById('subjsSearchThr')
-            for (let subj of this.dataModel.getSubjsByCoverage(parseInt(subjInputObj.value))) {
-                this.dataModel.excludeSubj(subj)
+        let roisExcludeObj = document.getElementById('roisSearchExclude')
+        roisExcludeObj.onclick = () => {
+            let roisInputObj = document.getElementById('roisSearchThr')
+            for (let roi of this.dataModel.getRoisByCoverage(parseInt(roisInputObj.value))) {
+                this.dataModel.setRoiActive(roi, false)
             }
-            this.globalUpdateSubjs()
-        }*/
+            this.globalUpdateRois()
+            for (let obj of this.roiCheckObjs) {
+                obj.checked = dataModel.isRoiActive(obj.value)
+            }
+        }
     }
 
     this.globalUpdateSubjs = () => {
         this.updateExcluded()
         this.updateSubjsSearch()
         this.mainTable.updateRows()
+        statsUI.updateStatsListener()
+    }
+
+    this.globalUpdateRois = () => {
+        this.updateExcluded()
+        this.updateRoisSearch()
+        this.mainTable.updateColumns()
         statsUI.updateStatsListener()
     }
 
