@@ -36,7 +36,7 @@ def log_process_start(subject, worker_name):
 
 def log_process_end(subject, worker_name, state, ellapsed_time):
     end_time_string = time.asctime(time.localtime(time.time()))
-    state = state and el_time > 600
+    state = state and ellapsed_time > 600
     state_str = 'correctly' if state else 'erroneously'
     output = 'Worker {} ends analysing subject {} {} at {}.\n'.format(worker_name, subject[0], state_str, end_time_string)
     output += 'Elapsed time: {:.2f} s ({:.2f} hours).\n'.format(ellapsed_time, ellapsed_time/3600)
