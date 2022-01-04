@@ -1,5 +1,5 @@
 import sys
-import os.path
+import os.path as path
 import xml.etree.ElementTree as ET
 
 class SlotSettings:
@@ -7,7 +7,7 @@ class SlotSettings:
         self.title = title
         self.source = source.replace('\\', '/')
         self.grid_pos = pos
-        if not os.path.isfile(self.source):
+        if not path.isfile(self.source):
             raise ValueError('File "{}" was not found.'.format(self.source))
 
     def __repr__(self):
@@ -16,21 +16,24 @@ class SlotSettings:
 
 class DataLoader:
     def __init__(self, source):
+        self.source_dir = path.dirname(source)
         tree = ET.parse(source)
         self.root = tree.getroot()
 
     def get_background(self):
         attrs = self.root.find('background').attrib
-        if not os.path.isfile(attrs['file']):
+        background_path = attrs['file'] if path.isabs(attrs['file']) else path.join(self.source_dir, attrs['file'])
+        if not path.isfile(background_path):
             raise ValueError('Background file "{}" was not found.'.format(attrs['file']))
 
         x = int(attrs.get('shift_x', 0))
         y = int(attrs.get('shift_y', 0))
         z = int(attrs.get('shift_z', 0))
-        return attrs['file'], int(attrs['crop']), (x, y, z)
+        return background_path, int(attrs['crop']), (x, y, z)
 
     def get_slots(self):
         for slot_tag in self.root.find('slots').findall('slot'):
             attrs = slot_tag.attrib
             pos_str = attrs['pos'].split(',')
-            yield SlotSettings(attrs['name'], attrs['source'], (int(pos_str[0]), int(pos_str[1])))
+            slot_path = attrs['source'] if path.isabs(attrs['source']) else path.join(self.source_dir, attrs['source'])
+            yield SlotSettings(attrs['name'], slot_path.replace('\\', '/'), (int(pos_str[0]), int(pos_str[1])))
