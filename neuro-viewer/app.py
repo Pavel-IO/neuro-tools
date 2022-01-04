@@ -39,7 +39,7 @@ class Workspace:
         self.mode = 's:z'
         self.show_colorbar = False
         self.merger = ImgSimpleMerger()
-        self.buffer = False
+        self.wait_recalc = False
         self.running = False
 
     def redraw(self):
@@ -51,19 +51,16 @@ class Workspace:
         self.slots[-1].redraw()
         self.finished()
 
-    def start(self):
-        self.running = True
-        p = Thread(target=self.process_merge, args=())
-        p.start()
-
     def finished(self):
         self.running = False
         self.run()
 
     def run(self):
-        if not self.running and self.buffer:
-            self.buffer = False
-            self.start()
+        if not self.running and self.wait_recalc:
+            self.wait_recalc = False
+            self.running = True
+            p = Thread(target=self.process_merge, args=())
+            p.start()
 
     def update_merge(self):
         if self.slots and self.slots[-1].name == 'Merge':
@@ -80,7 +77,7 @@ class Slot:
         self.max = max(numpy.nanmax(img), numpy.abs(numpy.nanmin(img)))
 
         self.running = False
-        self.buffer = []
+        self.wait_recalc = False
 
         self.ax = None
         self.scale(0.5 * self.max, True, True)
@@ -88,19 +85,14 @@ class Slot:
 
     def scale(self, thres, show_plus, show_minus):
         self.thres = thres
-        neg_thres = -thres if show_minus else -self.max
-        pos_thres = thres if show_plus else self.max
-        self.buffer = [(neg_thres, pos_thres)]
-        self.run()
+        self.neg_thres = -thres if show_minus else -self.max
+        self.pos_thres = thres if show_plus else self.max
+        self.wait_recalc = True
+        self.run()  # spousti prepocat a prekresleni aktualniho slotu (ne merge obrazu) v samostatnem threadu
 
     def process_scale(self, k):
         self.img.scale2(k[0], k[1])
         self.finished()
-
-    def start(self, k):
-        self.running = True
-        p = Thread(target=self.process_scale, args=(k,))
-        p.start()
 
     def finished(self):
         if self.ax:
@@ -109,8 +101,12 @@ class Slot:
         self.run()
 
     def run(self):
-        if not self.running and self.buffer:
-            self.start(self.buffer.pop())
+        if not self.running and self.wait_recalc:
+            self.wait_recalc = False
+            self.running = True
+            p = Thread(target=self.process_scale, args=((self.neg_thres, self.pos_thres),))
+            p.start()
+
         # self.workspace.update_merge()
 
     def get_active(self):

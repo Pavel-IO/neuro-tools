@@ -38,6 +38,16 @@ def create_reg_template(mod_template_filename, crop_size, shift_xyz):
     return cm.gray(norm_template(final_template))[:, :, :, 0:3]
 
 
+def get_glass_template(mode):
+    if mode == 'z':
+        view = rgb_template[37, ::-1, ::-1, :]
+    elif mode == 'y':
+        view = rgb_template[:, 55, ::-1, :]
+    elif mode == 'x':
+        view = rgb_template[:, :, 50, :]
+    return view
+
+
 def resample(nifti_image, mod_template_filename, crop_size, shift_xyz):
     img_temp = resample_to_img(nifti_image, load_img(mod_template_filename))
     x1, x2, y1, y2, z1, z2 = fov(img_temp.get_data().shape, crop_size, shift_xyz)
@@ -65,7 +75,6 @@ class ImgFormatter:
 
     def get_raw_data(self):
         return numpy.copy(self.img)
-        # return self.reorient(numpy.copy(self.img.get_data()[:, 9:100, :]))
 
     def get_active(self):
         return (~numpy.isnan(self.scaled)).astype(numpy.float)
