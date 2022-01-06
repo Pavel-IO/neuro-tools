@@ -34,21 +34,23 @@ def tp(start_time, name=''):
 class Workspace:
     def __init__(self, crop_size):
         self.slots = []
+        self.all_loaded = False
         self.current_slide = 0
         self.slider_size = crop_size
         self.mode = 's:z'
         self.show_colorbar = False
         self.merger = ImgSimpleMerger()
-        self.wait_recalc = False
         self.running = False
+        self.wait_recalc = False
 
     def redraw(self):
         for slot in self.slots:
             slot.redraw()
 
     def process_merge(self):
-        self.slots[-1].img.reset_img(self.merger.merge())
-        self.slots[-1].redraw()
+        if self.all_loaded:
+            self.slots[-1].img.reset_img(self.merger.merge())
+            self.slots[-1].redraw()
         self.finished()
 
     def finished(self):
@@ -63,9 +65,11 @@ class Workspace:
             p.start()
 
     def update_merge(self):
-        if self.slots and self.slots[-1].name == 'Merge':
-            self.buffer = True
-            self.run()
+        self.wait_recalc = True
+        self.run()
+
+    def loaded(self):
+        self.all_loaded = True
 
 
 class Slot:
@@ -82,6 +86,8 @@ class Slot:
         self.ax = None
         self.scale(0.5 * self.max, True, True)
         self.gui = {}
+        if name == 'Merge':
+            self.scale(0, True, True)
 
     def scale(self, thres, show_plus, show_minus):
         self.thres = thres
@@ -98,6 +104,7 @@ class Slot:
         if self.ax:
             self.redraw()
         self.running = False
+        self.workspace.update_merge()
         self.run()
 
     def run(self):
@@ -106,8 +113,6 @@ class Slot:
             self.running = True
             p = Thread(target=self.process_scale, args=((self.neg_thres, self.pos_thres),))
             p.start()
-
-        # self.workspace.update_merge()
 
     def get_active(self):
         return self.img.get_active()

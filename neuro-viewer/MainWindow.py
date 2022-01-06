@@ -33,6 +33,7 @@ class MainWindow(QMainWindow):
         self.init_right_panel()
         self.init_slices()
         self.show()
+        self.workspace.loaded()
 
     def init_menu(self):
         openFile = QAction('&Open File', self)
@@ -154,7 +155,6 @@ class MainWindow(QMainWindow):
         slider = QSlider(Qt.Horizontal, self)
         slider.setMinimum(1)
         slider.setMaximum(slider_ticks)
-        slider.setValue(1)
         slider.setTickPosition(QSlider.TicksAbove)
         slider.setTickInterval(5)
         slider.setValue(slot.thres * thres_coef)
