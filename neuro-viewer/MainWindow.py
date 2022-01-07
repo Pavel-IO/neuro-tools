@@ -12,18 +12,17 @@ import time
 
 class MainWindow(QMainWindow):
     right_panel_width = 100
-    grid_rows = 2
-    grid_cols = 3
 
     def __init__(self, workspace):
         super(MainWindow, self).__init__()
         self.setMouseTracking(True)
 
         self.workspace = workspace
+        self.grid_rows, self.grid_cols = self.workspace.grid_size
 
         self.global_slider = None
 
-        self.setGeometry(50, 50, 1200, 700)
+        self.setGeometry(50, 50, 300 * self.grid_cols + 300, 350 * self.grid_rows)
         self.setWindowTitle('Epilepsy project - modalities viewer')
         self.setWindowIcon(QIcon('pic.png'))
 

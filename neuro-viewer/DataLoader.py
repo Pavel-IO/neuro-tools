@@ -20,6 +20,9 @@ class DataLoader:
         tree = ET.parse(source)
         self.root = tree.getroot()
 
+    def get_grid_size(self):
+        return int(self.root.attrib.get('rows', 2)), int(self.root.attrib.get('cols', 3))
+
     def get_background(self):
         attrs = self.root.find('background').attrib
         background_path = attrs['file'] if path.isabs(attrs['file']) else path.join(self.source_dir, attrs['file'])

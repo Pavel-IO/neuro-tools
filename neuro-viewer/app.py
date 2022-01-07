@@ -32,8 +32,9 @@ def tp(start_time, name=''):
 
 
 class Workspace:
-    def __init__(self, crop_size):
+    def __init__(self, loader, crop_size):
         self.slots = []
+        self.grid_size = loader.get_grid_size()
         self.all_loaded = False
         self.current_slide = 0
         self.slider_size = crop_size
@@ -171,7 +172,7 @@ if __name__ == '__main__':
     rgb_template = create_reg_template(mod_template_filename, crop_size, shift_xyz)
     src_img = nibabel.load(mod_template_filename)
 
-    workspace = Workspace(crop_size)
+    workspace = Workspace(loader, crop_size)
     for slot_loader in loader.get_slots():
         src_img = nibabel.load(slot_loader.source)
         src = resample(src_img, mod_template_filename, crop_size, shift_xyz)
@@ -180,7 +181,8 @@ if __name__ == '__main__':
         workspace.merger.add(slot)
         print('Loaded {}'.format(slot_loader.title))
 
-    workspace.slots.append(Slot(workspace, 'Merge', (3, 3), workspace.merger.merge(), loader.get_tiv(), rgb_template))
+    r, c = workspace.grid_size
+    workspace.slots.append(Slot(workspace, 'Merge', (c, r), workspace.merger.merge(), loader.get_tiv(), rgb_template))
     workspace.slots[-1].max = len(workspace.slots) - 1
 
     def run():
