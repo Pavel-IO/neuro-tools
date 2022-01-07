@@ -37,3 +37,6 @@ class DataLoader:
             pos_str = attrs['pos'].split(',')
             slot_path = attrs['source'] if path.isabs(attrs['source']) else path.join(self.source_dir, attrs['source'])
             yield SlotSettings(attrs['name'], slot_path.replace('\\', '/'), (int(pos_str[0]), int(pos_str[1])))
+
+    def get_tiv(self):
+        return int(self.root.find('background').attrib['tiv'])

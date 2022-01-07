@@ -57,6 +57,7 @@ class Workspace:
         self.running = False
         self.run()
 
+    # spousti prepocet a prekresleni merge obrazu v samostatnem threadu
     def run(self):
         if not self.running and self.wait_recalc:
             self.wait_recalc = False
@@ -73,11 +74,11 @@ class Workspace:
 
 
 class Slot:
-    def __init__(self, workspace, name, pos, img, rgb_template):
+    def __init__(self, workspace, name, pos, img, tiv, rgb_template):
         self.workspace = workspace
         self.name = name
         self.pos = pos
-        self.img = ImgFormatter(img, self.name, rgb_template)
+        self.img = ImgFormatter(img, self.name, tiv, rgb_template)
         self.max = max(numpy.nanmax(img), numpy.abs(numpy.nanmin(img)))
 
         self.running = False
@@ -87,14 +88,14 @@ class Slot:
         self.scale(0.5 * self.max, True, True)
         self.gui = {}
         if name == 'Merge':
-            self.scale(0, True, True)
+            self.scale(0.00001, True, True)
 
     def scale(self, thres, show_plus, show_minus):
         self.thres = thres
         self.neg_thres = -thres if show_minus else -self.max
         self.pos_thres = thres if show_plus else self.max
         self.wait_recalc = True
-        self.run()  # spousti prepocat a prekresleni aktualniho slotu (ne merge obrazu) v samostatnem threadu
+        self.run()  # spousti prepocet a prekresleni aktualniho slotu (ne merge obrazu) v samostatnem threadu
 
     def process_scale(self, k):
         self.img.scale2(k[0], k[1])
@@ -119,6 +120,7 @@ class Slot:
 
     def redraw(self):
         ax = self.ax
+        self.gui['coverage'].setText('{:.0f} %'.format(100*self.img.coverage))
         modes_parts = workspace.mode.split(':')
         should_redraw = None
         if modes_parts[0] == 's':
@@ -146,11 +148,12 @@ class Slot:
         else:
             self.workspace.val_label.setText('Value')
 
-    def set_gui(self, figure, canvas):
+    def set_gui(self, figure, canvas, coverage):
         self.gui['figure'] = figure
         self.gui['canvas'] = canvas
         self.ax = self.gui['figure'].add_subplot(111)  # position=[0., 0., 1., 1.]
         self.gui['figure'].subplots_adjust(left=0.05, right=0.95, top=0.95, bottom=0.05)
+        self.gui['coverage'] = coverage
         self.ax.axis('off')
 
 
@@ -172,12 +175,12 @@ if __name__ == '__main__':
     for slot_loader in loader.get_slots():
         src_img = nibabel.load(slot_loader.source)
         src = resample(src_img, mod_template_filename, crop_size, shift_xyz)
-        slot = Slot(workspace, slot_loader.title, slot_loader.grid_pos, src, rgb_template)
+        slot = Slot(workspace, slot_loader.title, slot_loader.grid_pos, src, loader.get_tiv(), rgb_template)
         workspace.slots.append(slot)
         workspace.merger.add(slot)
         print('Loaded {}'.format(slot_loader.title))
 
-    workspace.slots.append(Slot(workspace, 'Merge', (3, 2), workspace.merger.merge(), rgb_template))
+    workspace.slots.append(Slot(workspace, 'Merge', (3, 3), workspace.merger.merge(), loader.get_tiv(), rgb_template))
     workspace.slots[-1].max = len(workspace.slots) - 1
 
     def run():

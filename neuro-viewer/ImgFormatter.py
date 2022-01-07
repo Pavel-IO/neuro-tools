@@ -55,9 +55,10 @@ def resample(nifti_image, mod_template_filename, crop_size, shift_xyz):
 
 
 class ImgFormatter:
-    def __init__(self, img, title, rgb_template):
+    def __init__(self, img, title, tiv, rgb_template):
         self.img = img
         self.title = title
+        self.tiv = tiv
         self.rgb_template = rgb_template
         self.scaled = None
         self.colored = None
@@ -65,6 +66,7 @@ class ImgFormatter:
         self.tmin = None
         self.tmax = None
         self.last_view = None
+        self.coverage = -1
 
     def reset_img(self, img):
         self.img = img
@@ -108,6 +110,7 @@ class ImgFormatter:
 
         self.scaled = self.scale(self.get_raw_data(), tmin, tmax)  # zobrazuje se v glass view a pro merger
         self.colored = self.color(self.scaled, self.rgb_template, cm.seismic)  # zobrazuje se ve slice view
+        self.coverage = numpy.count_nonzero(~numpy.isnan(self.scaled)) / self.tiv
 
     @staticmethod
     def reorient(img):

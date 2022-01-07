@@ -137,6 +137,7 @@ class MainWindow(QMainWindow):
         canvas.setParent(self)
         figure.set_facecolor('black')
 
+        # nazev metody
         lname = QLabel(self)
         lname.setAlignment(Qt.AlignLeft)
         lname.setText(slot.name)
@@ -146,6 +147,16 @@ class MainWindow(QMainWindow):
         font.setPointSize(12)
         # font.setBold(True)
         lname.setFont(font)
+
+        # procentualni pokryti
+        cname = QLabel(self)
+        cname.setAlignment(Qt.AlignLeft)
+        cname.setText('20 %')
+        cname.setStyleSheet('QLabel { background-color : black; color : white; }')
+        cname.resize(50, 25)
+        font = cname.font()
+        font.setPointSize(12)
+        cname.setFont(font)
 
         label = QLabel(self)
         label.setAlignment(Qt.AlignLeft)
@@ -182,6 +193,7 @@ class MainWindow(QMainWindow):
             label.move(pos[0] + 15, pos[1] + canvas_size[1] + 1)
             label.resize(90, 15)
             lname.move(pos[0] + 15, pos[1] + 10)
+            cname.move(pos[0] + 15, pos[1] + size[1] - 45)
             slider_width = 0.55 * ceil(size[0])
             slider.move(pos[0] + 110, pos[1] + canvas_size[1] + 1)
             slider.resize(slider_width, 15)
@@ -193,7 +205,7 @@ class MainWindow(QMainWindow):
         slider.valueChanged.connect(change_tresh)
         checkbox_plus.stateChanged.connect(change_tresh)
         checkbox_minus.stateChanged.connect(change_tresh)
-        slot.set_gui(figure, canvas)
+        slot.set_gui(figure, canvas, cname)
 
         def onmove(event):
             if event.xdata is not None:
