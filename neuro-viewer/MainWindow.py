@@ -23,7 +23,7 @@ class MainWindow(QMainWindow):
         self.global_slider = None
 
         self.setGeometry(50, 50, 300 * self.grid_cols + 300, 350 * self.grid_rows)
-        self.setWindowTitle('Epilepsy project - modalities viewer')
+        self.setWindowTitle('Patient {} - NeuroViewer'.format(workspace.get_patient_name()))
         self.setWindowIcon(QIcon('pic.png'))
 
         self.resize_handlers = []

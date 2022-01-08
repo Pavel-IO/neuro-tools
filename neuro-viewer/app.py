@@ -35,6 +35,7 @@ class Workspace:
     def __init__(self, loader, crop_size):
         self.slots = []
         self.grid_size = loader.get_grid_size()
+        self.loader = loader
         self.all_loaded = False
         self.current_slide = 0
         self.slider_size = crop_size
@@ -43,6 +44,9 @@ class Workspace:
         self.merger = ImgSimpleMerger()
         self.running = False
         self.wait_recalc = False
+
+    def get_patient_name(self):
+        return loader.get_patient_name()
 
     def redraw(self):
         for slot in self.slots:
