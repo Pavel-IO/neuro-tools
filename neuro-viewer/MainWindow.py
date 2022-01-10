@@ -167,7 +167,7 @@ class MainWindow(QMainWindow):
         slider.setMaximum(slider_ticks)
         slider.setTickPosition(QSlider.TicksAbove)
         slider.setTickInterval(5)
-        slider.setValue(slot.thres * thres_coef)
+        slider.setValue(int(round(slot.thres * thres_coef)))
         # slider.setFocusPolicy(Qt.NoFocus)
 
         # +/- checkboxes
@@ -195,9 +195,9 @@ class MainWindow(QMainWindow):
             cname.move(pos[0] + 15, pos[1] + size[1] - 45)
             slider_width = 0.55 * ceil(size[0])
             slider.move(pos[0] + 110, pos[1] + canvas_size[1] + 1)
-            slider.resize(slider_width, 15)
-            checkbox_plus.move(pos[0] + 120 + slider_width, pos[1] + canvas_size[1] - 4)
-            checkbox_minus.move(pos[0] + 150 + slider_width, pos[1] + canvas_size[1] - 4)
+            slider.resize(int(round(slider_width)), 15)
+            checkbox_plus.move(int(round(pos[0] + 120 + slider_width)), int(round(pos[1] + canvas_size[1] - 4)))
+            checkbox_minus.move(int(round(pos[0] + 150 + slider_width)), int(round(pos[1] + canvas_size[1] - 4)))
         resize()
         self.resize_handlers.append(resize)
 
