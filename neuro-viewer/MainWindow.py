@@ -9,6 +9,39 @@ import matplotlib.pyplot as plt
 from math import ceil
 import time
 
+def clip(val, l, h):
+    return l if val < l else (h if val > h else val)
+
+class SliceSlider:
+    def __init__(self, workspace, ref_slider):
+        self.workspace = workspace
+        self.ui_slider = ref_slider
+
+    def get(self):
+        return self.ui_slider.value()
+
+    def set_min(self, m):
+        self.min = m
+        self.ui_slider.setMinimum(m)
+
+    def set_max(self, M):
+        self.max = M
+        self.ui_slider.setMaximum(M)
+
+    def inc(self):
+        new_val = clip(self.get() + 1, self.min, self.max)
+        self.ui_slider.setValue(new_val)
+
+    def dec(self):
+        new_val = clip(self.get() - 1, self.min, self.max)
+        self.ui_slider.setValue(new_val)
+
+    def get_ui(self):
+        return self.ui_slider
+
+    def redraw_workspace(self):
+        self.workspace.current_slide = self.get()
+        self.workspace.redraw()
 
 class MainWindow(QMainWindow):
     right_panel_width = 100
@@ -33,6 +66,15 @@ class MainWindow(QMainWindow):
         self.init_slices()
         self.show()
         self.workspace.loaded()
+
+    def wheelEvent(self, event):
+        numDegrees = event.angleDelta().y() / 8
+        numSteps = numDegrees / 15
+        event.accept()
+        if numDegrees < 0:
+            self.global_slider.dec()
+        else:
+            self.global_slider.inc()
 
     def init_menu(self):
         openFile = QAction('&Open File', self)
@@ -62,13 +104,14 @@ class MainWindow(QMainWindow):
         # file = open(name, 'w')
 
     def init_global_slider(self):
-        self.global_slider = QSlider(self)
-        self.global_slider.setMinimum(0)
-        self.global_slider.setMaximum(self.workspace.slider_size - 1)
-        self.global_slider.setValue(40)
-        self.global_slider.setTickPosition(QSlider.TicksBelow)
-        self.global_slider.setTickInterval(5)
-        self.global_slider.valueChanged.connect(self.change_global_slide)
+        self.global_slider = SliceSlider(self.workspace, QSlider(self))
+        self.global_slider.set_min(0)
+        self.global_slider.set_max(self.workspace.slider_size - 1)
+        slider = self.global_slider.get_ui()
+        slider.setValue(40)
+        slider.setTickPosition(QSlider.TicksBelow)
+        slider.setTickInterval(5)
+        slider.valueChanged.connect(self.change_global_slide)
 
     def init_right_panel(self):
         allow_glass = False
@@ -117,8 +160,8 @@ class MainWindow(QMainWindow):
             self.view_mode.resize(80, 30)
             self.show_colorbar.move(left_edge, 80)
             self.show_colorbar.resize(80, 30)
-            self.global_slider.move(left_edge, 120)
-            self.global_slider.resize(50, 300)
+            self.global_slider.get_ui().move(left_edge, 120)
+            self.global_slider.get_ui().resize(50, 300)
             self.pos_label.move(left_edge, 450)
             self.pos_label.resize(90, 15)
             self.val_label.move(left_edge, 465)
@@ -228,10 +271,8 @@ class MainWindow(QMainWindow):
         return ((pos[0]-1)*width, (pos[1]-1)*height + 20), (width, height)
 
     def change_global_slide(self):
-        # init_time = time.time()
-        self.workspace.current_slide = self.global_slider.value()
+        self.workspace.current_slide = self.global_slider.get()
         self.workspace.redraw()
-        # print('------- Global slider: ' + str(self.global_slider.value()) + ' in ' + str(time.time() - init_time) + ' s')
 
     def question_example(self):
         choice = QMessageBox.question(self, 'Message', 'Are you sure to quit?', QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
