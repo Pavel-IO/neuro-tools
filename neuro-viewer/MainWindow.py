@@ -12,6 +12,11 @@ import time
 def clip(val, l, h):
     return l if val < l else (h if val > h else val)
 
+def set_font_size(ui_label, size):
+    font =  ui_label.font()
+    font.setPointSize(size)
+    ui_label.setFont(font)
+
 class SliceSlider:
     def __init__(self, workspace, ref_slider):
         self.workspace = workspace
@@ -54,6 +59,7 @@ class MainWindow(QMainWindow):
         self.grid_rows, self.grid_cols = self.workspace.grid_size
 
         self.global_slider = None
+        self.direction_labels = []
 
         self.setGeometry(50, 50, 300 * self.grid_cols + 300, 350 * self.grid_rows)
         self.setWindowTitle('Patient {} - NeuroViewer'.format(workspace.get_patient_name()))
@@ -66,6 +72,7 @@ class MainWindow(QMainWindow):
         self.init_slices()
         self.show()
         self.workspace.loaded()
+        self.label_directions(self.workspace.mode)
 
     def wheelEvent(self, event):
         numDegrees = event.angleDelta().y() / 8
@@ -103,6 +110,25 @@ class MainWindow(QMainWindow):
         name, _ = QFileDialog.getSaveFileName(self, 'Save File', options=QFileDialog.DontUseNativeDialog)
         # file = open(name, 'w')
 
+    def label_directions(self, mode):
+        def label_slots(left_label, right_label):
+            for pointers in self.direction_labels:
+                pointers[0].setText(left_label)
+                pointers[1].setText(right_label)
+        def label_slider(top_label, bottom_label):
+            self.slider_label_top.setText(top_label)
+            self.slider_label_bottom.setText(bottom_label)
+        _, plane = mode.split(':')
+        if plane == 'x':
+            label_slots('P', 'A')
+            label_slider('R', 'L')
+        if plane == 'y':
+            label_slots('R', 'L')
+            label_slider('A', 'P')
+        if plane == 'z':
+            label_slots('R', 'L')
+            label_slider('I', 'S')
+
     def init_global_slider(self):
         self.global_slider = SliceSlider(self.workspace, QSlider(self))
         self.global_slider.set_min(0)
@@ -112,13 +138,17 @@ class MainWindow(QMainWindow):
         slider.setTickPosition(QSlider.TicksBelow)
         slider.setTickInterval(5)
         slider.valueChanged.connect(self.change_global_slide)
+        self.slider_label_top = QLabel(self)
+        set_font_size(self.slider_label_top, 13)
+        self.slider_label_bottom = QLabel(self)
+        set_font_size(self.slider_label_bottom, 13)
 
     def init_right_panel(self):
         allow_glass = False
         if allow_glass:
             modes_map = {0: 's:y', 1: 's:x', 2: 's:z', 3: 'g:y', 4: 'g:x', 5: 'g:z'}
         else:
-            modes_map = {0: 's:y', 1: 's:x', 2: 's:z'}
+            modes_map = {0: 's:y', 1: 's:x', 2: 's:z'}  # coronar / sagital / transverse
         mode_index = [key for key, value in modes_map.items() if value == self.workspace.mode][0]
 
         self.view_mode = QComboBox(self)
@@ -134,6 +164,7 @@ class MainWindow(QMainWindow):
         def change_mode(i):
             self.workspace.mode = modes_map[i]
             self.workspace.redraw()
+            self.label_directions(self.workspace.mode)
         self.view_mode.currentIndexChanged.connect(change_mode)
 
         self.show_colorbar = QCheckBox("Show colorbar", self)
@@ -160,11 +191,13 @@ class MainWindow(QMainWindow):
             self.view_mode.resize(80, 30)
             self.show_colorbar.move(left_edge, 80)
             self.show_colorbar.resize(80, 30)
-            self.global_slider.get_ui().move(left_edge, 120)
+            self.global_slider.get_ui().move(left_edge, 140)
             self.global_slider.get_ui().resize(50, 300)
-            self.pos_label.move(left_edge, 450)
+            self.slider_label_top.move(left_edge + 12, 110)
+            self.slider_label_bottom.move(left_edge + 12, 140 + 295)
+            self.pos_label.move(left_edge, 500)
             self.pos_label.resize(90, 15)
-            self.val_label.move(left_edge, 465)
+            self.val_label.move(left_edge, 515)
             self.pos_label.resize(90, 15)
         resize()
         self.resize_handlers.append(resize)
@@ -185,10 +218,8 @@ class MainWindow(QMainWindow):
         lname.setText(slot.name)
         lname.setStyleSheet('QLabel { background-color : black; color : white; }')
         lname.resize(120, 25)
-        font = lname.font()
-        font.setPointSize(12)
+        set_font_size(lname, 12)
         # font.setBold(True)
-        lname.setFont(font)
 
         # procentualni pokryti
         cname = QLabel(self)
@@ -196,9 +227,18 @@ class MainWindow(QMainWindow):
         cname.setText('20 %')
         cname.setStyleSheet('QLabel { background-color : black; color : white; }')
         cname.resize(50, 25)
-        font = cname.font()
-        font.setPointSize(12)
-        cname.setFont(font)
+        set_font_size(cname, 12)
+
+        # smer (R/L, A/P, I/S)
+        def create_direction_label():
+            dname = QLabel(self)
+            dname.setAlignment(Qt.AlignLeft)
+            dname.setStyleSheet('QLabel { background-color : black; color : white; }')
+            dname.resize(10, 15)
+            set_font_size(dname, 10)
+            return dname
+        dlname = create_direction_label()
+        drname = create_direction_label()
 
         label = QLabel(self)
         label.setAlignment(Qt.AlignLeft)
@@ -236,6 +276,8 @@ class MainWindow(QMainWindow):
             label.resize(90, 15)
             lname.move(pos[0] + 15, pos[1] + 10)
             cname.move(pos[0] + 15, pos[1] + size[1] - 45)
+            dlname.move(pos[0] + 15, pos[1] + ceil(size[1] / 2) - 20)
+            drname.move(pos[0] + size[0] - 30, pos[1] + ceil(size[1] / 2) - 20)
             slider_width = 0.55 * ceil(size[0])
             slider.move(pos[0] + 110, pos[1] + canvas_size[1] + 1)
             slider.resize(int(round(slider_width)), 15)
@@ -248,6 +290,7 @@ class MainWindow(QMainWindow):
         checkbox_plus.stateChanged.connect(change_tresh)
         checkbox_minus.stateChanged.connect(change_tresh)
         slot.set_gui(figure, canvas, cname)
+        self.direction_labels.append((dlname, drname))
 
         def onmove(event):
             if event.xdata is not None:

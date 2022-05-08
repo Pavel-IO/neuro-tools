@@ -125,7 +125,7 @@ class Slot:
 
     def redraw(self):
         ax = self.ax
-        self.gui['coverage'].setText('{:.0f} %'.format(100*self.img.coverage))
+        self.gui['coverage'].setText('{:.0f} %'.format(100 * self.img.coverage))
         modes_parts = workspace.mode.split(':')
         should_redraw = None
         if modes_parts[0] == 's':
