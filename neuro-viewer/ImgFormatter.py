@@ -1,7 +1,6 @@
 from nibabel import Nifti1Image
 from nilearn.image import load_img, resample_to_img
 import numpy
-from nilearn import plotting
 import matplotlib.pyplot as plt
 import matplotlib
 import matplotlib.cm as cm
@@ -35,7 +34,7 @@ def create_reg_template(mod_template_filename, crop_size, shift_xyz):
     final_template = reorient(mod_template.get_data()[x1:x2, y1:y2, z1:z2])
     final_template[final_template == 0] = numpy.max(final_template)
     norm_template = matplotlib.colors.Normalize(vmin=0, vmax=numpy.nanmax(final_template), clip=True)
-    return cm.gray(norm_template(final_template))[:, :, :, 0:3]
+    return cm.gray(norm_template(final_template))
 
 
 def get_glass_template(mode):
@@ -97,7 +96,8 @@ class ImgFormatter:
     def color(img, template, schema):
         assert img.shape == template.shape[0:-1]
         norm_tmap = matplotlib.colors.Normalize(vmin=-1, vmax=1, clip=True)
-        rgb_tmap = schema(norm_tmap(img))[..., 0:3]  # 0.12, nejdrazsi funkce zrejme
+        rgb_tmap = schema(norm_tmap(img))  # 0.12, nejdrazsi funkce zrejme
+        # rgb_tmap[...,3] = 0.3
         use_tmap_ind = numpy.logical_not(numpy.logical_or(numpy.isnan(img), img == 0))
 
         colored = numpy.copy(template)  # 0.04
