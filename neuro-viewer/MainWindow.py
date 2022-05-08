@@ -204,7 +204,7 @@ class MainWindow(QMainWindow):
 
     def init_slice(self, slot):
         slider_ticks = 200
-        label_format = 'v = {0:.5f}'
+        label_format = 'v={0:.3f}'
         thres_coef = slider_ticks / slot.max
 
         figure = plt.figure()
@@ -272,17 +272,16 @@ class MainWindow(QMainWindow):
             canvas.move(*pos)
             canvas_size = size[0] - 1, size[1] - 18
             canvas.resize(*canvas_size)
-            label.move(pos[0] + 15, pos[1] + canvas_size[1] + 1)
+            label.move(pos[0] + 5, pos[1] + canvas_size[1] + 1)
             label.resize(90, 15)
             lname.move(pos[0] + 15, pos[1] + 10)
             cname.move(pos[0] + 15, pos[1] + size[1] - 45)
-            dlname.move(pos[0] + 15, pos[1] + ceil(size[1] / 2) - 20)
-            drname.move(pos[0] + size[0] - 30, pos[1] + ceil(size[1] / 2) - 20)
-            slider_width = 0.55 * ceil(size[0])
-            slider.move(pos[0] + 110, pos[1] + canvas_size[1] + 1)
-            slider.resize(int(round(slider_width)), 15)
-            checkbox_plus.move(int(round(pos[0] + 120 + slider_width)), int(round(pos[1] + canvas_size[1] - 4)))
-            checkbox_minus.move(int(round(pos[0] + 150 + slider_width)), int(round(pos[1] + canvas_size[1] - 4)))
+            dlname.move(pos[0] + 15, int(pos[1] + ceil(size[1] / 2) - 20))
+            drname.move(pos[0] + size[0] - 30, int(pos[1] + ceil(size[1] / 2) - 20))
+            slider.move(pos[0] + 55, pos[1] + canvas_size[1] + 1)
+            slider.resize(size[0] - 55 - 60 - 10, 15)
+            checkbox_plus.move(int(round(pos[0] + size[0] - 60)), int(round(pos[1] + canvas_size[1] - 6)))
+            checkbox_minus.move(int(round(pos[0] + size[0] - 30)), int(round(pos[1] + canvas_size[1] - 6)))
         resize()
         self.resize_handlers.append(resize)
 
