@@ -78,7 +78,7 @@ class ImgFormatter:
         return numpy.copy(self.img)
 
     def get_active(self):
-        return (~numpy.isnan(self.scaled)).astype(numpy.float)
+        return (~numpy.isnan(self.scaled)).astype(numpy.float64)
 
     @staticmethod
     def scale(img, tmin, tmax):

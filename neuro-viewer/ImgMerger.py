@@ -13,7 +13,7 @@ class ImgSimpleMerger:
         self.slots.append(img_data)
 
     def merge(self):
-        merged = numpy.zeros(dtype=numpy.float, shape=self.slots[0].get_active().shape)
+        merged = numpy.zeros(dtype=numpy.float64, shape=self.slots[0].get_active().shape)
         for slot in self.slots:
             merged += slot.get_active()
         return merged

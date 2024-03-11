@@ -4,3 +4,5 @@ Vyzaduje
 - numpy
 - nibabel
 - nilearn
+- matplotlib
+- scipy
